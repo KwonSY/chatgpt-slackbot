@@ -10,7 +10,6 @@ import dotenv
 dotenv.load_dotenv()
 
 # APP 생성
-db.init()
 app_token = os.environ.get("SLACK_APP_TOKEN")
 bot_token = os.environ.get("SLACK_BOT_TOKEN")
 assert app_token and bot_token, "토큰을 등록해주세요."
