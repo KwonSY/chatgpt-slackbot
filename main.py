@@ -1,6 +1,5 @@
 import os
 import pip
-import re
 from subprocess import call
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
