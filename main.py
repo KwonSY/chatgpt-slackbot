@@ -37,6 +37,9 @@ def handle_message_events(event, client, message, say):
     except AssertionError as ex:
         if str(ex) == "101001":
             say("토큰이 만료되었습니다.\n`refresh_token` 토큰을 다시 발급은 후\n`refresh_token=<TOKEN>`을 입력해주세요.")
+            key = "refresh_token"
+            value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZmJhOThhNWU1NzA0MDk3ZjY1NGZlZiIsIndydG5VaWQiOiI4SXdFSjlXMDJPcy1HR0tPVjFJNFZWUlQiLCJpc3N1ZXIiOiJ3cnRuIiwiaWF0IjoxNzQ0NTczNTkwLCJleHAiOjE3NDU3ODMxOTB9.0SwSDCCIn_f6eGb1GHIvNgtvsVvyNKVQhKfVz8gt7ws"
+            db.store_config(key, value)
         elif str(ex) == "101002":
             say("채팅 방이 존재하지 않습니다.\n'room_id'를 제거 후 초기화하였습니다. 다시 시도해주세요.")
         elif str(ex) == "101003":
