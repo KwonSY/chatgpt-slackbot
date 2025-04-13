@@ -1,5 +1,7 @@
 import os
+import pip
 import re
+from subprocess import call
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from langchain_openai import ChatOpenAI
@@ -8,6 +10,10 @@ from langchain.chains import LLMChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 import dotenv 
 dotenv.load_dotenv()
+
+with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
+    for library_name in file.readlines():
+        call("pip install " + library_name, shell=True)
 
 # APP 생성
 app_token = os.environ.get("SLACK_APP_TOKEN")
