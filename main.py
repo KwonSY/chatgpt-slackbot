@@ -1,7 +1,5 @@
 import os
 import re
-from lib import wrtn, db
-
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from langchain_openai import ChatOpenAI
@@ -20,6 +18,19 @@ app = App(token=bot_token)
 
 llm = ChatOpenAI(temperature=0)
 
+#템플렛
+template = """어시스턴트는 단순한 질문에 답하는 것부터 광범위한 주제에 대해 심도 있는 설명과 토론을 제공하는 등 다양한 작업을 돕도록 설계되었습니다. 언어 모델로서 어시스턴트는 받은 입력을 기반으로 인간처럼 텍스트를 생성할 수 있으며, 자연스럽게 들리는 대화를 진행하고 관련된 주제에 대해 일관성 있고 적절한 응답을 제공할 수 있습니다.
+
+어시스턴트는 지속적으로 학습하고 개선되고 있으며, 그 능력은 끊임없이 진화하고 있습니다. 대량의 텍스트를 처리하고 이해할 수 있으며, 이 지식을 활용하여 다양한 질문에 정확하고 유익한 응답을 제공할 수 있습니다. 또한, 어시스턴트는 받은 입력을 기반으로 자체적인 텍스트를 생성할 수 있어 다양한 주제에 대한 토론을 진행하고 설명 및 설명을 제공할 수 있습니다.
+
+전반적으로 어시스턴트는 다양한 작업에 도움을 줄 수 있는 강력한 도구이며, 광범위한 주제에 대해 가치 있는 통찰과 정보를 제공할 수 있습니다. 특정 질문에 대한 도움이 필요하든, 특정 주제에 대해 대화를 나누고 싶든, 어시스턴트는 도와줄 준비가 되어 있습니다.
+
+꼭 한국어로 대답해주세요.
+
+    {history}
+    Human: {human_input}
+    Assistant:"""
+
 prompt = PromptTemplate(
     input_variables=["history", "human_input"], 
     template=template
@@ -32,37 +43,13 @@ chatgpt_chain = LLMChain(
     memory=ConversationBufferWindowMemory(k=2),
 )
 
-@app.event("message")
-def handle_message_events(event, client, message, say):
-    try:
-        text = message.get("text")
-        if text == "도움말":
-            say("👉 `refresh_token=<REFRESH_TOKEN>` : 토큰 지정\n👉 `model=<GPT3.5 or GPT4>` : 모델 지정\n👉 그 외 : `GPT` 답변")
-            return
-        # 설정값 저장
-        if re.match(r"(\w+)=(\w+)", text):
-            key, value = text.split("=", 1)
-            db.store_config(key, value)
-            say(f"👉 key : {key}\n👉 value : {value}\n설정 값이 저장되었습니다👍")
-            return
-
-        output = chatgpt_chain.predict(human_input = message['text'])   
-        say(output)
-    except AssertionError as ex:
-        if str(ex) == "101001":
-            say("토큰이 만료되었습니다.\n`refresh_token` 토큰을 다시 발급은 후\n`refresh_token=<TOKEN>`을 입력해주세요.")
-        elif str(ex) == "101002":
-            say("채팅 방이 존재하지 않습니다.\n'room_id'를 제거 후 초기화하였습니다. 다시 시도해주세요.")
-        elif str(ex) == "101003":
-            say("답변 작성간 오류가 발생하였습니다.")
-        elif str(ex) == "101004":
-            say("대화방 생성간 오류가 발생하였습니다.")
-        elif str(ex) == "101005":
-            say("대화방 조회간 오류가 발생하였습니다.")
-        else:
-            say(f"답변 작성간 오류가 발생하였습니다😂\n오류 내용 : {ex}")
-    except Exception as ex:
-        say(f"답변 작성간 알 수 없는 오류가 발생하였습니다😂\n오류 내용 : {ex}")
+#Message handler for Slack
+@app.message(".*")
+def message_handler(message, say, logger):
+    print(message)
+    
+    output = chatgpt_chain.predict(human_input = message['text'])   
+    say(output)
 
 
 if __name__ == '__main__':
