@@ -1,10 +1,4 @@
-certifi
-charset-normalizer
-idna
-requests
 slack-bolt
-slack-sdk
-urllib3
 langchain
 langchain_openai
 python-dotenv
