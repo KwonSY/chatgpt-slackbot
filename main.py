@@ -45,15 +45,7 @@ def handle_message_events(event, client, message, say):
             db.store_config(key, value)
             say(f"👉 key : {key}\n👉 value : {value}\n설정 값이 저장되었습니다👍")
             return
-"""
-        say("작성중입니다")
-        resp = "".join([i for i in wrtn.conversation(text)])
-        resp = resp.replace("\\n", "\n")
-        resp = resp.replace("\\t", "\t")
-        resp = resp.replace('\\"', '"')
-        resp = resp.replace("\\'", "'")
-        say(resp)
-"""
+
         output = chatgpt_chain.predict(human_input = message['text'])   
         say(output)
     except AssertionError as ex:
