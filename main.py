@@ -7,12 +7,27 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from openai import OpenAI
+from config import OPENAI_API_KEY
 import dotenv 
 dotenv.load_dotenv()
 
 with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
     for library_name in file.readlines():
         call("pip install " + library_name, shell=True)
+
+open_api_key = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=open_api_key)
+
+response = client.chat.completions.create(
+        model=self.model_name,
+        messages=conversation,
+        temperature=0,
+        top_p=1,
+        frequency_penalty=0,    
+        presence_penalty=0
+    )
+    return response.choices[0].message.content
 
 # APP 생성
 app_token = os.environ.get("SLACK_APP_TOKEN")
