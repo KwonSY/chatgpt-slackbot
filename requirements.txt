@@ -5,3 +5,4 @@ requests==2.31.0
 slack-bolt==1.18.0
 slack-sdk==3.21.3
 urllib3==2.0.2
+langchain_openai==0.3.12
