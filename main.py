@@ -46,6 +46,10 @@ def handle_image_message(event, say, logger):
                 image_bytes = response.content
                 image = None
 
+                # 이미지 MIME 타입 확인
+                mime_type, _ = mimetypes.guess_type(file_name)
+                logger.info(f"파일 MIME 타입: {mime_type}")
+
                 # 1차 시도: PIL
                 try:
                     image = Image.open(BytesIO(image_bytes))
