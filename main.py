@@ -47,12 +47,17 @@ def handle_message(message, say, logger):
 
     # 실행 완료 대기
     while True:
-        run_status = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+        run_status = client.beta.threads.runs.retrieve(
+            thread_id=thread.id,
+            run_id=run.id
+        )
+        
     if run_status.status == "completed":
         break
     elif run_status.status == "failed":
         say("어시스턴트 실행 실패")
         return
+        
     time.sleep(1)
 
     # 응답 가져오기
