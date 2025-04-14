@@ -51,7 +51,7 @@ def handle_image_message(event, say, logger):
                 logger.info("이미지 base64 인코딩 완료")
 
                 gpt_response = client.chat.completions.create(
-                    model="gpt-4-vision-preview",
+                    model="gpt-4-turbo",
                     messages=[
                         {
                             "role": "user",
