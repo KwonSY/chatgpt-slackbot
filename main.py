@@ -33,7 +33,6 @@ def handle_image_message(event, say, logger):
     for file_info in files:
         if file_info["mimetype"].startswith("image/"):
             file_name = file_info.get("name", "")
-            file_ext = os.path.splitext(file_name)[-1].lower()
             image_url = file_info["url_private_download"]
             headers = {"Authorization": f"Bearer {slack_bot_token}"}
             response = requests.get(image_url, headers=headers)
@@ -54,7 +53,7 @@ def handle_image_message(event, say, logger):
                 except Exception as e1:
                     logger.warning(f"PIL 실패: {e1}")
 
-                    # 2차 시도: pyheif (HEIC 처리)
+                    # 2차 시도: HEIC
                     try:
                         heif_file = pyheif.read_heif(image_bytes)
                         image = Image.frombytes(
@@ -65,16 +64,25 @@ def handle_image_message(event, say, logger):
                         )
                         logger.info("HEIC 이미지 처리 성공")
                     except Exception as e2:
-                        logger.error(f"HEIC 처리도 실패: {e2}")
-                        say(f"<@{user}> 이미지를 열 수 없어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
-                        return
+                        logger.warning(f"HEIC 처리 실패: {e2}")
 
-                # JPEG로 변환 후 base64 인코딩
+                        # 3차 시도: JPEG로 강제 로딩
+                        try:
+                            image = Image.open(BytesIO(image_bytes))
+                            image = image.convert("RGB")
+                            logger.info("JPEG 강제 로딩 성공")
+                        except Exception as e3:
+                            logger.error(f"JPEG 강제 시도도 실패: {e3}")
+                            say(f"<@{user}> 이미지를 열 수 없어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
+                            return
+
+                # JPEG로 변환 + base64 인코딩
                 with BytesIO() as output:
                     image.convert("RGB").save(output, format="JPEG")
                     jpeg_bytes = output.getvalue()
                     image_base64 = base64.b64encode(jpeg_bytes).decode("utf-8")
 
+                # GPT에 요청
                 gpt_response = client.chat.completions.create(
                     model="gpt-4.5-preview",
                     messages=[
