@@ -10,16 +10,16 @@ from openai import OpenAI
 dotenv.load_dotenv()
 
 #API 키 세팅
-app_token = os.environ.get("SLACK_APP_TOKEN")
-bot_token = os.environ.get("SLACK_BOT_TOKEN")
+slack_app_token = os.environ.get("SLACK_APP_TOKEN")
+slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")
 open_api_key = os.environ.get("OPENAI_API_KEY")
 assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 
-assert open_api_key and app_token and bot_token and assistant_id, "필요한 환경변수를 설정해주세요."
+assert open_api_key and slack_app_token and slack_bot_token and assistant_id, "필요한 환경변수를 설정해주세요."
 
 #OpenAI 및 Slack 앱 초기화
 client = OpenAI(api_key=open_api_key)
-app = App(token=bot_token)
+app = App(token=slack_bot_token)
 
 with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
     for library_name in file.readlines():
@@ -78,4 +78,4 @@ def handle_image_message(event, say, logger):
 
 #앱 실행
 if __name__ == "__main__":
-    SocketModeHandler(app, app_token).start()
+    SocketModeHandler(app, slack_app_token).start()
