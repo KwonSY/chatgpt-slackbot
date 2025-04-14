@@ -15,7 +15,7 @@ bot_token = os.environ.get("SLACK_BOT_TOKEN")
 open_api_key = os.environ.get("OPENAI_API_KEY")
 assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 
-assert open_api_key and app_token and bot_token and assistant_id, "필요한 환경변소룰 설정해주세요."
+assert open_api_key and app_token and bot_token and assistant_id, "필요한 환경변수를 설정해주세요."
 
 #OpenAI 및 Slack 앱 초기화
 client = OpenAI(api_key=open_api_key)
@@ -29,44 +29,29 @@ with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
 # 메시지 핸들러
 @app.message(".*")
 def handle_message(message, say, logger):
+    user = message['user']
     user_message = message['text']
-    thread = client.beta.threads.create()
+    logger.info(f"User ({user}) said: {user_message}")
     
-    # 사용자 메시지 추가
-    client.beta.threads.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=user_message
-    )
-
-    # Assistant 실행
-    run = client.beta.threads.runs.create(
-        thread_id=thread.id,
-        assistant_id=assistant_id
-    )
-
-    # 실행 완료 대기
-    while True:
-        run_status = client.beta.threads.runs.retrieve(
-            thread_id=thread.id,
-            run_id=run.id
+    try:
+        # GPT-4에게 질문 보내기
+        response = client.chat.completions.create(
+            model="gpt-4",  # 또는 "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message}
+            ]
         )
-        print(run_status)
-        
-    if run_status.status == "completed":
-        break
-    elif run_status.status == "failed":
-        say("어시스턴트 실행 실패")
-        return
-        
-    time.sleep(1)
 
-    # 어시스턴트 응답 받아오기
-    messages = client.beta.threads.messages.list(thread_id=thread.id)
-    latest_message = messages.data[0].content[0].text.value
+        # 응답 텍스트 추출
+        answer = response.choices[0].message.content.strip()
 
-    # 슬랙에 응답 보내기
-    say(latest_message)
+        # Slack에 응답
+        say(f"<@{user}> {answer}")
+
+    except OpenAIError as e:
+        logger.error(f"OpenAI API 오류: {e}")
+        say("⚠️ GPT 응답 중 문제가 발생했어요. 나중에 다시 시도해 주세요.")
 
 #앱 실행
 if __name__ == "__main__":
