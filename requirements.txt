@@ -1,5 +1,3 @@
-base64
-mimetypes
 openai
 requests
 slack-bolt
