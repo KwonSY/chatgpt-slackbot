@@ -34,11 +34,6 @@ def handle_image_message(event, say, logger):
         if file_info["mimetype"].startswith("image/"):
             file_name = file_info.get("name", "")
             file_ext = os.path.splitext(file_name)[-1].lower()
-
-            if file_ext not in supported_extensions:
-                say(f"<@{user}> `{file_ext}` 형식은 지원하지 않아요 😢\n지원되는 형식: {', '.join(supported_extensions)}")
-                return
-
             image_url = file_info["url_private_download"]
             headers = {"Authorization": f"Bearer {slack_bot_token}"}
             response = requests.get(image_url, headers=headers)
@@ -50,35 +45,31 @@ def handle_image_message(event, say, logger):
 
             try:
                 image_bytes = response.content
-                image_format = None
                 image = None
 
+                # 1차 시도: PIL
                 try:
-                    # 일반 이미지 열기 시도
                     image = Image.open(BytesIO(image_bytes))
-                    image_format = image.format
-                except UnidentifiedImageError:
-                    # HEIC만 pyheif 처리 시도
-                    if file_ext == ".heic":
-                        try:
-                            heif_file = pyheif.read_heif(image_bytes)
-                            image = Image.frombytes(
-                                heif_file.mode,
-                                heif_file.size,
-                                heif_file.data,
-                                "raw"
-                            )
-                            image_format = "HEIC"
-                            logger.info("HEIC 이미지를 JPEG로 변환할 준비 완료")
-                        except Exception as e:
-                            logger.error(f"HEIC 처리 실패: {e}")
-                            say(f"<@{user}> HEIC 이미지 변환에 실패했어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
-                            return
-                    else:
-                        logger.error("PIL로 이미지 열기 실패했고, HEIC도 아님")
+                    logger.info("PIL로 이미지 열기 성공")
+                except Exception as e1:
+                    logger.warning(f"PIL 실패: {e1}")
+
+                    # 2차 시도: pyheif (HEIC 처리)
+                    try:
+                        heif_file = pyheif.read_heif(image_bytes)
+                        image = Image.frombytes(
+                            heif_file.mode,
+                            heif_file.size,
+                            heif_file.data,
+                            "raw"
+                        )
+                        logger.info("HEIC 이미지 처리 성공")
+                    except Exception as e2:
+                        logger.error(f"HEIC 처리도 실패: {e2}")
                         say(f"<@{user}> 이미지를 열 수 없어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
                         return
 
+                # JPEG로 변환 후 base64 인코딩
                 with BytesIO() as output:
                     image.convert("RGB").save(output, format="JPEG")
                     jpeg_bytes = output.getvalue()
