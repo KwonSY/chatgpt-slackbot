@@ -13,10 +13,6 @@ assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 client = OpenAI(api_key=open_api_key)
 app = App(token=bot_token)
 
-with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
-    for library_name in file.readlines():
-        call("pip install " + library_name, shell=True)
-
 
 # 메시지 핸들러
 @app.message(".*")
