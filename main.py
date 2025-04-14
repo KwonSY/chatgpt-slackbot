@@ -24,7 +24,7 @@ def handle_message(message, say, logger):
     try:
         # GPT-4에게 질문 보내기
         response = client.chat.completions.create(
-            model="gpt-4",  # 또는 "gpt-3.5-turbo"
+            model="gpt-4.5-preview",  # 또는 "gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": user_message}
