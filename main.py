@@ -26,32 +26,55 @@ with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
         call("pip install " + library_name, shell=True)
 
 
-# 메시지 핸들러
-@app.message(".*")
-def handle_message(message, say, logger):
-    user = message['user']
-    user_message = message['text']
-    logger.info(f"User ({user}) said: {user_message}")
-    
-    try:
-        # GPT-4에게 질문 보내기
-        response = client.chat.completions.create(
-            model="gpt-4",  # 또는 "gpt-3.5-turbo"
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_message}
-            ]
-        )
+# 이미지 메시지 처리
+@app.event("message")
+def handle_image_message(event, say, logger):
+    files = event.get("files", [])
+    text = event.get("text", "")
+    user = event.get("user", "")
 
-        # 응답 텍스트 추출
-        answer = response.choices[0].message.content.strip()
+    if not files:
+        return  # 이미지가 없으면 무시
 
-        # Slack에 응답
-        say(f"<@{user}> {answer}")
+    for file_info in files:
+        if file_info["mimetype"].startswith("image/"):
+            image_url = file_info["url_private_download"]
+            headers = {"Authorization": f"Bearer {slack_bot_token}"}
+            response = requests.get(image_url, headers=headers)
 
-    except OpenAIError as e:
-        logger.error(f"OpenAI API 오류: {e}")
-        say("⚠️ GPT 응답 중 문제가 발생했어요. 나중에 다시 시도해 주세요.")
+            if response.status_code == 200:
+                image_bytes = response.content
+                image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+                logger.info("이미지 base64 인코딩 완료")
+
+                gpt_response = client.chat.completions.create(
+                    model="gpt-4-vision-preview",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": text or "이 이미지를 설명해줘.",
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{image_base64}"
+                                    },
+                                },
+                            ],
+                        }
+                    ],
+                    max_tokens=1000,
+                )
+
+                result_text = gpt_response.choices[0].message.content
+                say(f"<@{user}> GPT의 응답입니다:\n{result_text}")
+            else:
+                logger.error("이미지 다운로드 실패")
+                say(f"<@{user}> 이미지를 불러오지 못했어요 😥")
 
 #앱 실행
 if __name__ == "__main__":
