@@ -1,6 +1,5 @@
-slack-bolt
 openai
-requests
 pillow
 pyheif
-python-dotenv
+requests
+slack-bolt
