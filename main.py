@@ -1,6 +1,7 @@
 import os
 import requests
 import base64
+import mimetypes
 from PIL import Image, UnidentifiedImageError
 import pyheif
 from io import BytesIO
