@@ -1,6 +1,5 @@
+base64
 mimetypes
 openai
-pillow
-pyheif
 requests
 slack-bolt
