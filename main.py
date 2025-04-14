@@ -1,4 +1,5 @@
 import os
+import requests
 import dotenv
 import time
 from subprocess import call
