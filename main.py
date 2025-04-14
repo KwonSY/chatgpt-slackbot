@@ -60,11 +60,13 @@ def handle_message(message, say, logger):
         
     time.sleep(1)
 
-    # 응답 가져오기
+    # 어시스턴트 응답 받아오기
     messages = client.beta.threads.messages.list(thread_id=thread.id)
     latest_message = messages.data[0].content[0].text.value
+
+    # 슬랙에 응답 보내기
     say(latest_message)
 
-    # 실행
+#앱 실행
 if __name__ == "__main__":
     SocketModeHandler(app, app_token).start()
