@@ -1,15 +1,10 @@
 import os
 import dotenv
-import pip
+import time
 from subprocess import call
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from openai import OpenAI
-from config import OPENAI_API_KEY
 
 #환경변수 불러오기
 dotenv.load_dotenv()
