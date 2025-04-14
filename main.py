@@ -51,6 +51,7 @@ def handle_message(message, say, logger):
             thread_id=thread.id,
             run_id=run.id
         )
+        print(run_status)
         
     if run_status.status == "completed":
         break
