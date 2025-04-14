@@ -58,20 +58,25 @@ def handle_image_message(event, say, logger):
                     image = Image.open(BytesIO(image_bytes))
                     image_format = image.format
                 except UnidentifiedImageError:
-                    try:
-                        # HEIC라면 변환 시도
-                        heif_file = pyheif.read_heif(image_bytes)
-                        image = Image.frombytes(
-                            heif_file.mode, 
-                            heif_file.size, 
-                            heif_file.data,
-                            "raw"
-                        )
-                        image_format = "HEIC"
-                        logger.info("HEIC 이미지를 JPEG로 변환할 준비 완료")
-                    except Exception as e:
-                        logger.error(f"이미지 열기 실패: {e}")
-                        say(f"<@{user}> 이미지 형식을 인식하지 못했어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
+                    # HEIC만 pyheif 처리 시도
+                    if file_ext == ".heic":
+                        try:
+                            heif_file = pyheif.read_heif(image_bytes)
+                            image = Image.frombytes(
+                                heif_file.mode,
+                                heif_file.size,
+                                heif_file.data,
+                                "raw"
+                            )
+                            image_format = "HEIC"
+                            logger.info("HEIC 이미지를 JPEG로 변환할 준비 완료")
+                        except Exception as e:
+                            logger.error(f"HEIC 처리 실패: {e}")
+                            say(f"<@{user}> HEIC 이미지 변환에 실패했어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
+                            return
+                    else:
+                        logger.error("PIL로 이미지 열기 실패했고, HEIC도 아님")
+                        say(f"<@{user}> 이미지를 열 수 없어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
                         return
 
                 with BytesIO() as output:
