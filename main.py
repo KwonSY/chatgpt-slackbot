@@ -1,6 +1,7 @@
 import os
 import requests
 import base64
+from PIL import Image, UnidentifiedImageError
 import dotenv
 import time
 from PIL import Image
@@ -46,26 +47,44 @@ def handle_image_message(event, say, logger):
             headers = {"Authorization": f"Bearer {slack_bot_token}"}
             response = requests.get(image_url, headers=headers)
 
-            if response.status_code == 200:
-                # 이미지 파일 처리
-                image = Image.open(BytesIO(response.content))
+            if response.status_code != 200:
+                logger.error(f"이미지 다운로드 실패: {response.status_code}")
+                say(f"<@{user}> 이미지를 불러오지 못했어요 😥")
+                return
 
-                # 이미지 포맷 확인 및 변환
-                if image.format not in ['JPEG', 'PNG', 'GIF', 'WEBP']:
-                    logger.info(f"지원되지 않는 형식({image.format})을 JPEG로 변환합니다.")
-                    # JPEG로 변환
-                    with BytesIO() as output:
-                        image.convert('RGB').save(output, format="JPEG")
-                        image_bytes = output.getvalue()
-                else:
-                    image_bytes = response.content  # 이미 지원되는 형식이면 그대로 사용
+            try:
+                image_bytes = response.content
+                image_format = None
+                image = None
 
-                # base64 인코딩
-                image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-                logger.info("이미지 base64 인코딩 완료")
+                try:
+                    # 일반 이미지 열기 시도
+                    image = Image.open(BytesIO(image_bytes))
+                    image_format = image.format
+                except UnidentifiedImageError:
+                    try:
+                        # HEIC라면 변환 시도
+                        heif_file = pyheif.read_heif(image_bytes)
+                        image = Image.frombytes(
+                            heif_file.mode, 
+                            heif_file.size, 
+                            heif_file.data,
+                            "raw"
+                        )
+                        image_format = "HEIC"
+                        logger.info("HEIC 이미지를 JPEG로 변환할 준비 완료")
+                    except Exception as e:
+                        logger.error(f"이미지 열기 실패: {e}")
+                        say(f"<@{user}> 이미지 형식을 인식하지 못했어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
+                        return
+
+                with BytesIO() as output:
+                    image.convert("RGB").save(output, format="JPEG")
+                    jpeg_bytes = output.getvalue()
+                    image_base64 = base64.b64encode(jpeg_bytes).decode("utf-8")
 
                 gpt_response = client.chat.completions.create(
-                    model="gpt-4-turbo",  # 최신 Vision 모델
+                    model="gpt-4-turbo",
                     messages=[
                         {
                             "role": "user",
@@ -88,9 +107,10 @@ def handle_image_message(event, say, logger):
 
                 result_text = gpt_response.choices[0].message.content
                 say(f"<@{user}> GPT의 응답입니다:\n{result_text}")
-            else:
-                logger.error("이미지 다운로드 실패")
-                say(f"<@{user}> 이미지를 불러오지 못했어요 😥")
+
+            except Exception as e:
+                logger.exception("예외 발생")
+                say(f"<@{user}> 오류가 발생했어요: {str(e)}")
 
 #앱 실행
 if __name__ == "__main__":
