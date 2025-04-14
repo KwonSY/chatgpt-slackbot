@@ -53,26 +53,26 @@ def handle_image_message(event, say, logger):
                 except Exception as e1:
                     logger.warning(f"PIL 실패: {e1}")
 
-                    # 2차 시도: HEIC
+                    # 2차 시도: JPEG로 강제 로딩
                     try:
-                        heif_file = pyheif.read_heif(image_bytes)
-                        image = Image.frombytes(
-                            heif_file.mode,
-                            heif_file.size,
-                            heif_file.data,
-                            "raw"
-                        )
-                        logger.info("HEIC 이미지 처리 성공")
+                        image = Image.open(BytesIO(image_bytes))
+                        image = image.convert("RGB")
+                        logger.info("JPEG 강제 로딩 성공")
                     except Exception as e2:
-                        logger.warning(f"HEIC 처리 실패: {e2}")
+                        logger.warning(f"JPEG 강제 시도 실패: {e2}")
 
-                        # 3차 시도: JPEG로 강제 로딩
+                        # 3차 시도: HEIC 처리
                         try:
-                            image = Image.open(BytesIO(image_bytes))
-                            image = image.convert("RGB")
-                            logger.info("JPEG 강제 로딩 성공")
+                            heif_file = pyheif.read_heif(image_bytes)
+                            image = Image.frombytes(
+                                heif_file.mode,
+                                heif_file.size,
+                                heif_file.data,
+                                "raw"
+                            )
+                            logger.info("HEIC 이미지 처리 성공")
                         except Exception as e3:
-                            logger.error(f"JPEG 강제 시도도 실패: {e3}")
+                            logger.error(f"HEIC 처리 실패: {e3}")
                             say(f"<@{user}> 이미지를 열 수 없어요. PNG, JPEG, GIF, WEBP 형식을 사용해 주세요.")
                             return
 
