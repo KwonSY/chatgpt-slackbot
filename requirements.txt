@@ -1,3 +1,4 @@
+mimetypes
 openai
 pillow
 pyheif
