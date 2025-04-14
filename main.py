@@ -1,74 +1,50 @@
 import os
-import requests
-import base64
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
-import mimetypes
 
-# API 키 세팅
-slack_app_token = os.environ.get("SLACK_APP_TOKEN")
-slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")
+#API 키 세팅
+app_token = os.environ.get("SLACK_APP_TOKEN")
+bot_token = os.environ.get("SLACK_BOT_TOKEN")
 open_api_key = os.environ.get("OPENAI_API_KEY")
 assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 
-assert open_api_key and slack_app_token and slack_bot_token and assistant_id, "필요한 환경변수를 설정해주세요."
-
-# OpenAI 및 Slack 앱 초기화
-app = App(token=slack_bot_token)
+#OpenAI 및 Slack 앱 초기화
 client = OpenAI(api_key=open_api_key)
+app = App(token=bot_token)
 
-# 이미지 메시지 처리
-@app.event("message")
-def handle_image_message(event, say, logger):
-    files = event.get("files", [])
-    text = event.get("text", "")
-    user = event.get("user", "")
+with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
+    for library_name in file.readlines():
+        call("pip install " + library_name, shell=True)
 
-    if not files:
-        return  # 이미지가 없으면 무시
 
-    for file_info in files:
-        if file_info["mimetype"].startswith("image/"):
-            image_url = file_info["url_private_download"]
-            headers = {"Authorization": f"Bearer {slack_bot_token}"}
-            response = requests.get(image_url, headers=headers)
+# 메시지 핸들러
+@app.message(".*")
+def handle_message(message, say, logger):
+    user = message['user']
+    user_message = message['text']
+    logger.info(f"User ({user}) said: {user_message}")
+    
+    try:
+        # GPT-4에게 질문 보내기
+        response = client.chat.completions.create(
+            model="gpt-4",  # 또는 "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_message}
+            ]
+        )
 
-            if response.status_code == 200:
-                image_bytes = response.content
-                image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+        # 응답 텍스트 추출
+        answer = response.choices[0].message.content.strip()
 
-                logger.info("이미지 base64 인코딩 완료")
+        # Slack에 응답
+        say(f"<@{user}> {answer}")
 
-                # GPT 요청
-                gpt_response = client.chat.completions.create(
-                    model="gpt-4-turbo",
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": text or "이 이미지를 설명해줘.",
-                                },
-                                {
-                                    "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:image/jpeg;base64,{image_base64}"
-                                    },
-                                },
-                            ],
-                        }
-                    ],
-                    max_tokens=1000,
-                )
+    except OpenAIError as e:
+        logger.error(f"OpenAI API 오류: {e}")
+        say("⚠️ GPT 응답 중 문제가 발생했어요. 나중에 다시 시도해 주세요.")
 
-                result_text = gpt_response.choices[0].message.content
-                say(f"<@{user}> GPT의 응답입니다:\n{result_text}")
-            else:
-                logger.error("이미지 다운로드 실패")
-                say(f"<@{user}> 이미지를 불러오지 못했어요 😥")
-
-# 앱 실행
+#앱 실행
 if __name__ == "__main__":
-    SocketModeHandler(app, slack_app_token).start()
+    SocketModeHandler(app, app_token).start()
