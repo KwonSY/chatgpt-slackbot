@@ -9,13 +9,13 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
 import mimetypes
 
-#API 키 세팅
+# API 키 세팅
 slack_app_token = os.environ.get("SLACK_APP_TOKEN")
 slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")
 open_api_key = os.environ.get("OPENAI_API_KEY")
 assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 
-#OpenAI 및 Slack 앱 초기화
+# OpenAI 및 Slack 앱 초기화
 app = App(token=slack_bot_token)
 client = OpenAI(api_key=open_api_key)
 
@@ -55,7 +55,7 @@ def handle_image_message(event, say, logger):
                 try:
                     image = Image.open(BytesIO(image_bytes))
                     logger.info("PIL로 이미지 열기 성공")
-                except Exception as e1:
+                except UnidentifiedImageError as e1:
                     logger.warning(f"PIL 실패: {e1}")
 
                     # 2차 시도: JPEG로 강제 로딩
