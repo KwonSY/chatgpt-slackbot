@@ -2,17 +2,11 @@ import os
 import requests
 import base64
 from PIL import Image, UnidentifiedImageError
-import dotenv
-import time
 import pyheif
 from io import BytesIO
-from subprocess import call
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
-
-#환경변수 불러오기
-dotenv.load_dotenv()
 
 #API 키 세팅
 slack_app_token = os.environ.get("SLACK_APP_TOKEN")
@@ -20,16 +14,9 @@ slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")
 open_api_key = os.environ.get("OPENAI_API_KEY")
 assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 
-assert open_api_key and slack_app_token and slack_bot_token and assistant_id, "필요한 환경변수를 설정해주세요."
-
 #OpenAI 및 Slack 앱 초기화
 app = App(token=slack_bot_token)
 client = OpenAI(api_key=open_api_key)
-
-with open('requirements.txt', encoding='utf-8-sig',mode='r') as file:
-    for library_name in file.readlines():
-        call("pip install " + library_name, shell=True)
-
 
 # 이미지 메시지 처리
 @app.event("message")
@@ -41,8 +28,17 @@ def handle_image_message(event, say, logger):
     if not files:
         return  # 이미지가 없으면 무시
 
+    supported_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic"]
+    
     for file_info in files:
         if file_info["mimetype"].startswith("image/"):
+            file_name = file_info.get("name", "")
+            file_ext = os.path.splitext(file_name)[-1].lower()
+
+            if file_ext not in supported_extensions:
+                say(f"<@{user}> `{file_ext}` 형식은 지원하지 않아요 😢\n지원되는 형식: {', '.join(supported_extensions)}")
+                return
+
             image_url = file_info["url_private_download"]
             headers = {"Authorization": f"Bearer {slack_bot_token}"}
             response = requests.get(image_url, headers=headers)
