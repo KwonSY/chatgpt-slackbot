@@ -1,4 +1,5 @@
 slack-bolt
 openai
 requests
+Pillow
 python-dotenv
