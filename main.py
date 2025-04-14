@@ -85,7 +85,7 @@ def handle_image_message(event, say, logger):
                     image_base64 = base64.b64encode(jpeg_bytes).decode("utf-8")
 
                 gpt_response = client.chat.completions.create(
-                    model="gpt-4-turbo",
+                    model="gpt-4.5-preview",
                     messages=[
                         {
                             "role": "user",
