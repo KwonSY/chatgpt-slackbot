@@ -4,7 +4,7 @@ import base64
 from PIL import Image, UnidentifiedImageError
 import dotenv
 import time
-from PIL import Image
+import pyheif
 from io import BytesIO
 from subprocess import call
 from slack_bolt import App
