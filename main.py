@@ -1,13 +1,13 @@
 import os
 import requests
 import base64
-import mimetypes
 from PIL import Image, UnidentifiedImageError
 import pyheif
 from io import BytesIO
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
+import mimetypes
 
 #API 키 세팅
 slack_app_token = os.environ.get("SLACK_APP_TOKEN")
