@@ -54,9 +54,8 @@ def handle_message(message, say, logger):
 
         # 응답 메시지 가져오기
         messages = client.beta.threads.messages.list(thread_id=user_threads[user])
-        logger.warning("messages = " + messages)
-        logger.warning("msg = " + messages.data)
         for msg in reversed(messages.data):
+            logger.warning("msg = " + str(msg))
             if msg.role == "assistant":
                 say(f"<@{user}> {msg.content[0].text.value}")
                 break
