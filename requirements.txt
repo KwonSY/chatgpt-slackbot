@@ -1,3 +1,4 @@
+base64
 openai
 requests
 slack-bolt
