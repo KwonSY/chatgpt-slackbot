@@ -20,34 +20,36 @@ user_threads = {}
 @app.message(".*")
 def handle_message(message, say, logger):
     logger.warning("message = " + str(message))
-    user = message['user']
+    user_id = message['user']
     user_message = message['text']
     logger.info(f"User ({user}) said: {user_message}")
     
     try:
         # 사용자 스레드가 없다면 생성
-        if user not in user_threads:
+        if user_id not in user_threads:
             thread = client.beta.threads.create()
-            user_threads[user] = thread.id
+            user_threads[user_id] = thread.id
             logger.info(f"Created new thread for user {user}: {thread.id}")
 
+        thread_id = user_threads[user_id]
+        
         # 메시지를 스레드에 추가
         client.beta.threads.messages.create(
-            thread_id=user_threads[user],
+            thread_id=thread_id,
             role="user",
             content=user_message
         )
 
         # 어시스턴트 실행
         run = client.beta.threads.runs.create(
-            thread_id=user_threads[user],
+            thread_id=thread_id,
             assistant_id=assistant_id
         )
         
         # 응답 대기 (간단히 폴링)
         while True:
             run_status = client.beta.threads.runs.retrieve(
-                thread_id=user_threads[user],
+                thread_id=thread_id,
                 run_id=run.id
             )
             
@@ -55,12 +57,11 @@ def handle_message(message, say, logger):
                 break
 
         # 응답 메시지 가져오기
-        messages = client.beta.threads.messages.list(thread_id=user_threads[user])
-        for msg in reversed(messages.data):
-            logger.warning("msg = " + str(msg))
-            if msg.role == "assistant":
-                say(f"<@{user}> {msg.content[0].text.value}")
-                break
+        messages = client.beta.threads.messages.list(thread_id=thread_id)
+        assistant_messages = [m for m in messages.data if m.role == "assistant"]
+        last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
+
+        say(f"<@{user_id}> {last_message}")
 
     except Exception as e:
         logger.exception("Assistant API 오류 발생")
