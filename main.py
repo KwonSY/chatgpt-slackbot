@@ -82,6 +82,7 @@ def handle_image_upload(event, say, logger):
     for file_info in files:
         if file_info.get("mimetype", "").startswith("image"):
             image_url = file_info.get("url_private_download")
+            mime_type = file_info.get("mimetype", "image/jpeg")
             headers = {"Authorization": f"Bearer {bot_token}"}
             response = requests.get(image_url, headers=headers)
 
@@ -96,7 +97,7 @@ def handle_image_upload(event, say, logger):
                                 "role": "user",
                                 "content": [
                                     {"type": "text", "text": text},
-                                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+                                    {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{image_base64}"}}
                                 ]
                             }
                         ],
