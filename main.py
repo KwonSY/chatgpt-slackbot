@@ -2,8 +2,6 @@ import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
-from openai.types.beta.threads import Thread
-from openai.types.beta import Assistant
 
 #API 키 세팅
 app_token = os.environ.get("SLACK_APP_TOKEN")
