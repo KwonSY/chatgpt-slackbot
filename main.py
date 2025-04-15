@@ -23,7 +23,7 @@ def handle_message(message, say, logger):
     logger.warning("message = " + str(message))
     user_id = message['user']
     user_message = message['text']
-    logger.info(f"User ({user}) said: {user_message}")
+    logger.info(f"User ({user_id}) said: {user_message}")
     
     try:
         # 사용자 스레드가 없다면 생성
@@ -67,7 +67,7 @@ def handle_message(message, say, logger):
 
     except Exception as e:
         logger.exception("Assistant API 오류 발생")
-        say(f"<@{user}> GPT 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.")
+        say(f"<@{user_id}> GPT 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.")
 
 #앱 실행
 if __name__ == "__main__":
