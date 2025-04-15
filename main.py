@@ -19,6 +19,7 @@ user_threads = {}
 # 메시지 핸들러
 @app.message(".*")
 def handle_message(message, say, logger):
+    logger.warning("message = " + str(message))
     user = message['user']
     user_message = message['text']
     logger.info(f"User ({user}) said: {user_message}")
@@ -49,6 +50,7 @@ def handle_message(message, say, logger):
                 thread_id=user_threads[user],
                 run_id=run.id
             )
+            
             if run_status.status == "completed":
                 break
 
