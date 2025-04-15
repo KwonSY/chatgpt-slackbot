@@ -30,7 +30,7 @@ def handle_message(message, say, logger):
         if user_id not in user_threads:
             thread = client.beta.threads.create()
             user_threads[user_id] = thread.id
-            logger.info(f"Created new thread for user {user}: {thread.id}")
+            logger.info(f"Created new thread for user {user_id}: {thread.id}")
 
         thread_id = user_threads[user_id]
         
