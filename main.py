@@ -2,7 +2,6 @@ import os
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
-from openai.types.beta.threads import Thread
 
 #API 키 세팅
 app_token = os.environ.get("SLACK_APP_TOKEN")
@@ -36,6 +35,12 @@ def handle_message(message, say, logger):
             thread_id=user_threads[user],
             role="user",
             content=user_message
+        )
+
+        # 어시스턴트 실행
+        run = client.beta.threads.runs.create(
+            thread_id=user_threads[user],
+            assistant_id=assistant_id
         )
         
         # 응답 대기 (간단히 폴링)
