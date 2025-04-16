@@ -7,17 +7,17 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
 
-#API 키 세팅
+# API 키 세팅
 app_token = os.environ.get("SLACK_APP_TOKEN")
 bot_token = os.environ.get("SLACK_BOT_TOKEN")
 open_api_key = os.environ.get("OPENAI_API_KEY")
 assistant_id = os.environ.get("OPENAI_ASSISTANT_ID")
 
-#OpenAI 및 Slack 앱 초기화
+# 클라이언트 초기화
 client = OpenAI(api_key=open_api_key)
 app = App(token=bot_token)
 
-# 사용자별 스레드 저장용 딕셔너리
+# 유저별 thread_id 저장
 user_threads = {}
 threads_file = "threads.json"
 
@@ -26,19 +26,16 @@ if os.path.exists(threads_file):
     with open(threads_file, "r") as f:
         user_threads = json.load(f)
 
-# 저장 함수
 def save_threads():
     with open(threads_file, "w") as f:
         json.dump(user_threads, f)
 
-# 메시지 핸들러
 @app.event("message")
 def handle_message_or_image(event, say, logger):
     logger.warning("event = " + str(event))
     user_id = event.get("user")
     text = event.get("text", "")
     files = event.get("files", [])
-    logger.info(f"User ({user_id}) said: {text}")
 
     # 유저 스레드 초기화
     if text.strip().lower() == "/reset":
@@ -128,13 +125,11 @@ def handle_message_or_image(event, say, logger):
         messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
         assistant_messages = [m for m in messages.data if m.role == "assistant"]
         last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
-        logger.warning("last_message = " + str(last_message))
         say(f"<@{user_id}> {last_message}")
 
     except Exception as e:
         logger.error(f"텍스트 처리 오류: {e}")
         say(f"<@{user_id}> GPT 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.")
 
-#앱 실행
 if __name__ == "__main__":
     SocketModeHandler(app, app_token).start()
