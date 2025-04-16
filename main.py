@@ -54,6 +54,12 @@ def handle_message(message, say, logger):
                 thread_id=thread_id,
                 run_id=run.id
             )
+            ##
+            logger.warning(f"Run status: {run_status.status}")
+            logger.warning(f"Run full info: {run_status}")
+            if run_status.last_error:
+                logger.error(f"Run error: {run_status.last_error}")
+                ##
             if run_status.status == "completed":
                 break
             time.sleep(1)
