@@ -46,41 +46,7 @@ def handle_message_or_image(event, say, logger):
         return
 
     try:
-        # 이미지가 포함된 경우 vision 모델 사용
-        image_files = [f for f in files if f.get("mimetype", "").startswith("image")]
-        # 이미지가 있는 경우 GPT-4-Vision 사용
-        if image_files:
-            logger.warning("파일 O = " + str(event))
-            
-            file_info = image_files[0]
-            image_url = file_info.get("url_private_download")
-            mime_type = file_info.get("mimetype", "image/jpeg")
-            headers = {"Authorization": f"Bearer {bot_token}"}
-            response = requests.get(image_url, headers=headers)
-
-            if response.status_code == 200:
-                image_base64 = base64.b64encode(response.content).decode("utf-8")
-
-                vision_response = client.chat.completions.create(
-                    model="gpt-4-vision-preview",
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": text or "이 이미지를 설명해줘."},
-                                {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{image_base64}"}}
-                            ]
-                        }
-                    ],
-                    max_tokens=1000
-                )
-                result_text = vision_response.choices[0].message.content.strip()
-                say(f"<@{user_id}> {result_text}")
-                return
-
-            else:
-                say(f"<@{user_id}> 이미지를 불러오지 못했어요 😥")
-                return
+        #이미지 처리 코드 잠시삭제
         
         # 이미지 없고 텍스트만 있는 경우: 어시스턴트 thread 사용
         if user_id not in user_threads:
