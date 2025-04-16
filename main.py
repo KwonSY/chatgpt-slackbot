@@ -48,15 +48,18 @@ def handle_message(message, say, logger):
         )
         logger.warning(run)
         
-        # 응답 대기 (간단히 폴링)
-        while True:
+        # 최대 15초 기다리기
+        for _ in range(15):
             run_status = client.beta.threads.runs.retrieve(
                 thread_id=thread_id,
                 run_id=run.id
             )
-            
             if run_status.status == "completed":
                 break
+            time.sleep(1)
+        else:
+            say(f"<@{user_id}> GPT 응답 시간이 너무 오래 걸려서 중단했어요 😥")
+            return
 
         # 응답 메시지 가져오기
         messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
