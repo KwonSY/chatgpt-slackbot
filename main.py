@@ -1,5 +1,9 @@
 import os
 import time
+<<<<<<< HEAD
+=======
+import base64
+>>>>>>> parent of 7ddf5f6 (Update main.py)
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
