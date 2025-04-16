@@ -47,6 +47,7 @@ def handle_message_or_image(event, say, logger):
 
     # 이미지가 있는 경우 GPT-4-Vision 사용
     if files:
+        logger.warning("파일 O = " + str(event))
         for file_info in files:
             if file_info.get("mimetype", "").startswith("image"):
                 try:
@@ -86,6 +87,7 @@ def handle_message_or_image(event, say, logger):
 
     # 이미지 없고 텍스트만 있는 경우: 어시스턴트 thread 사용
     try:
+        logger.warning("파일 X = " + str(event))
         if user_id not in user_threads:
             thread = client.beta.threads.create()
             user_threads[user_id] = thread.id
