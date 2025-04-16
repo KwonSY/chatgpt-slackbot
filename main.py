@@ -1,7 +1,5 @@
 import os
 import time
-import base64
-import requests
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
@@ -70,46 +68,6 @@ def handle_message(message, say, logger):
     except Exception as e:
         logger.exception("Assistant API 오류 발생")
         say(f"<@{user_id}> GPT 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.")
-
-@app.event("message")
-def handle_image_upload(event, say, logger):
-    user_id = event.get("user")
-    files = event.get("files", [])
-    text = event.get("text", "") or "이 이미지를 설명해줘."
-
-    if not files:
-        return
-
-    for file_info in files:
-        if file_info.get("mimetype", "").startswith("image"):
-            image_url = file_info.get("url_private_download")
-            mime_type = file_info.get("mimetype", "image/jpeg")
-            headers = {"Authorization": f"Bearer {bot_token}"}
-            response = requests.get(image_url, headers=headers)
-
-            if response.status_code == 200:
-                image_base64 = base64.b64encode(response.content).decode("utf-8")
-
-                try:
-                    response = client.chat.completions.create(
-                        model="gpt-4-vision-preview",
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": [
-                                    {"type": "text", "text": text},
-                                    {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{image_base64}"}}
-                                ]
-                            }
-                        ],
-                        max_tokens=1000
-                    )
-                    result_text = response.choices[0].message.content.strip()
-                    say(f"<@{user_id}> {result_text}")
-
-                except Exception as e:
-                    logger.error(f"이미지 처리 중 오류: {e}")
-                    say(f"<@{user_id}> 이미지를 처리하는 중 문제가 발생했어요 😥")
 
 #앱 실행
 if __name__ == "__main__":
