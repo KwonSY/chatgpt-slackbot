@@ -48,21 +48,21 @@ def handle_message(message, say, logger):
         )
         logger.warning(run)
         
-        # 최대 15초 기다리기
-        for _ in range(15):
+        # 최대 30초 기다리기 (3초 간격, 총 10번)
+        for _ in range(10):
             run_status = client.beta.threads.runs.retrieve(
                 thread_id=thread_id,
                 run_id=run.id
             )
-            ##
             logger.warning(f"Run status: {run_status.status}")
-            logger.warning(f"Run full info: {run_status}")
-            if run_status.last_error:
-                logger.error(f"Run error: {run_status.last_error}")
-                ##
+
             if run_status.status == "completed":
                 break
-            time.sleep(1)
+            elif run_status.status == "failed":
+                logger.error(f"Run failed! Error: {run_status.last_error}")
+                say(f"<@{user_id}> GPT 응답 실패 😥: {run_status.last_error.message}")
+                return
+            time.sleep(3)
         else:
             say(f"<@{user_id}> GPT 응답 시간이 너무 오래 걸려서 중단했어요 😥")
             return
