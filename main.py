@@ -32,7 +32,7 @@ def save_threads():
         json.dump(user_threads, f)
 
 # 메시지 핸들러
-@app.message(".*")
+@app.event("message")
 def handle_message_or_image(event, say, logger):
     logger.warning("event = " + str(event))
     user_id = event.get("user")
