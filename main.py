@@ -2,6 +2,7 @@ import os
 import time
 import base64
 import requests
+import json
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
