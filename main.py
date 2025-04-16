@@ -34,7 +34,7 @@ def save_threads():
 # 메시지 핸들러
 @app.message(".*")
 def handle_message_or_image(event, say, logger):
-    logger.warning("message = " + str(message))
+    logger.warning("event = " + str(event))
     user_id = event.get("user")
     text = event.get("text", "")
     files = event.get("files", [])
