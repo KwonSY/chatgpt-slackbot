@@ -59,8 +59,12 @@ def handle_message(message, say, logger):
             if run_status.status == "completed":
                 break
             elif run_status.status == "failed":
-                logger.error(f"Run failed! Error: {run_status.last_error}")
-                say(f"<@{user_id}> GPT 응답 실패 😥: {run_status.last_error.message}")
+                error = run_status.last_error
+                logger.error(f"Run failed! Error: {error}")
+                if error.code == "rate_limit_exceeded":
+                    say(f"<@{user_id}> ⚠️ 현재 사용량 제한(쿼터)을 초과했어요. 조금 뒤에 다시 시도해 주세요!")
+                else:
+                    say(f"<@{user_id}> GPT 응답 실패 😥: {error.message}")
                 return
             time.sleep(3)
         else:
