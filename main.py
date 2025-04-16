@@ -45,49 +45,44 @@ def handle_message_or_image(event, say, logger):
         say(f"<@{user_id}> 대화가 초기화되었어요! 새로 시작해볼까요?")
         return
 
-    # 이미지가 있는 경우 GPT-4-Vision 사용
-    if files:
-        logger.warning("파일 O = " + str(event))
-        for file_info in files:
-            if file_info.get("mimetype", "").startswith("image"):
-                try:
-                    image_url = file_info.get("url_private_download")
-                    mime_type = file_info.get("mimetype", "image/jpeg")
-                    headers = {"Authorization": f"Bearer {bot_token}"}
-                    response = requests.get(image_url, headers=headers)
-
-                    if response.status_code == 200:
-                        image_base64 = base64.b64encode(response.content).decode("utf-8")
-
-                        # 이미지 + 텍스트로 vision 모델 호출
-                        result = client.chat.completions.create(
-                            model="gpt-4-vision-preview",
-                            messages=[
-                                {
-                                    "role": "user",
-                                    "content": [
-                                        {"type": "text", "text": text or "이 이미지를 설명해줘."},
-                                        {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{image_base64}"}}
-                                    ]
-                                }
-                            ],
-                            max_tokens=1000
-                        )
-                        result_text = result.choices[0].message.content.strip()
-                        say(f"<@{user_id}> {result_text}")
-                        return
-                    else:
-                        say(f"<@{user_id}> 이미지를 불러오지 못했어요 😥")
-                        return
-
-                except Exception as e:
-                    logger.error(f"이미지 처리 오류: {e}")
-                    say(f"<@{user_id}> 이미지를 처리하는 중 문제가 발생했어요 😥")
-                    return
-
-    # 이미지 없고 텍스트만 있는 경우: 어시스턴트 thread 사용
     try:
-        logger.warning("파일 X = " + str(event))
+        # 이미지가 포함된 경우 vision 모델 사용
+        image_files = [f for f in files if f.get("mimetype", "").startswith("image")]
+        # 이미지가 있는 경우 GPT-4-Vision 사용
+        if image_files:
+            logger.warning("파일 O = " + str(event))
+            
+            file_info = image_files[0]
+            image_url = file_info.get("url_private_download")
+            mime_type = file_info.get("mimetype", "image/jpeg")
+            headers = {"Authorization": f"Bearer {bot_token}"}
+            response = requests.get(image_url, headers=headers)
+
+            if response.status_code == 200:
+                image_base64 = base64.b64encode(response.content).decode("utf-8")
+
+                vision_response = client.chat.completions.create(
+                    model="gpt-4-vision-preview",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": text or "이 이미지를 설명해줘."},
+                                {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{image_base64}"}}
+                            ]
+                        }
+                    ],
+                    max_tokens=1000
+                )
+                result_text = vision_response.choices[0].message.content.strip()
+                say(f"<@{user_id}> {result_text}")
+                return
+
+            else:
+                say(f"<@{user_id}> 이미지를 불러오지 못했어요 😥")
+                return
+        
+        # 이미지 없고 텍스트만 있는 경우: 어시스턴트 thread 사용
         if user_id not in user_threads:
             thread = client.beta.threads.create()
             user_threads[user_id] = thread.id
@@ -108,10 +103,8 @@ def handle_message_or_image(event, say, logger):
             assistant_id=assistant_id
         )
 
-        # 완료 대기
-        max_wait = 15
-        waited = 0
-        while waited < max_wait:
+        # 최대 15초 기다리기
+        for _ in range(15):
             run_status = client.beta.threads.runs.retrieve(
                 thread_id=thread_id,
                 run_id=run.id
@@ -119,7 +112,6 @@ def handle_message_or_image(event, say, logger):
             if run_status.status == "completed":
                 break
             time.sleep(1)
-            waited += 1
         else:
             say(f"<@{user_id}> GPT 응답 시간이 너무 오래 걸려서 중단했어요 😥")
             return
@@ -127,6 +119,7 @@ def handle_message_or_image(event, say, logger):
         messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
         assistant_messages = [m for m in messages.data if m.role == "assistant"]
         last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
+        
         say(f"<@{user_id}> {last_message}")
 
     except Exception as e:
