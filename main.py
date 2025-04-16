@@ -23,7 +23,7 @@ def handle_message(message, say, logger):
     logger.warning("message = " + str(message))
     user_id = message['user']
     user_message = message['text']
-    logger.info(f"User ({user_id}) said: {user_message}")
+    logger.warning(f"User ({user_id}) said: {user_message}")
     
     try:
         # 사용자 스레드가 없다면 생성
@@ -46,6 +46,7 @@ def handle_message(message, say, logger):
             thread_id=thread_id,
             assistant_id=assistant_id
         )
+        logger.warning(run)
         
         # 응답 대기 (간단히 폴링)
         while True:
