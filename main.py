@@ -59,6 +59,7 @@ def handle_message(message, say, logger):
 
         # 응답 메시지 가져오기
         messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
+        logger.warning("messages = " + str(messages))
         assistant_messages = [m for m in messages.data if m.role == "assistant"]
         last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
         logger.warning("last_message = " + str(last_message))
