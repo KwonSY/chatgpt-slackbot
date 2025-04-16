@@ -1,4 +1,3 @@
-json
 openai
 requests
 slack-bolt
