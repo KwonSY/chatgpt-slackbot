@@ -32,6 +32,10 @@ def save_threads():
 
 @app.event("message")
 def handle_message_or_image(event, say, logger):
+    # 메시지 전송자가 봇인지 확인 (자기 자신 메시지 무시)
+    if "subtype" in event and event["subtype"] == "bot_message":
+        return
+        
     logger.warning("event = " + str(event))
     user_id = event.get("user")
     text = event.get("text", "")
