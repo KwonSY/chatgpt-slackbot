@@ -22,8 +22,25 @@ user_threads = {}
 def handle_message(message, say, logger):
     logger.warning("message = " + str(message))
     user_id = message['user']
-    user_message = message['text']
-    logger.warning(f"User ({user_id}) said: {user_message}")
+    text = message['text']
+    logger.warning(f"User ({user_id}) said: {text}")
+
+    # 유저 스레드 초기화
+    if text.strip().lower() == "/reset":
+        thread = client.beta.threads.create()
+        user_threads[user_id] = thread.id
+        save_threads()
+        say(f"<@{user_id}> 대화가 초기화되었어요! 새로 시작해볼까요?")
+        return
+
+    # 테스트
+    if text.strip().lower() == "테스트":
+        say(f"<@{user_id}> 테스트되었습니다😆")
+        return
+
+    # 테스트
+    if text.strip().lower() == "변경근무" or text.strip().lower() == "변경 근무":
+        return
     
     try:
         # 사용자 스레드가 없다면 생성
@@ -38,7 +55,7 @@ def handle_message(message, say, logger):
         client.beta.threads.messages.create(
             thread_id=thread_id,
             role="user",
-            content=user_message
+            content=text
         )
 
         # 어시스턴트 실행
