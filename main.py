@@ -1,8 +1,11 @@
 import os
 import time
+import datetime
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 
 #API 키 세팅
 app_token = os.environ.get("SLACK_APP_TOKEN")
@@ -38,8 +41,37 @@ def handle_message(message, say, logger):
         say(f"<@{user_id}> 테스트되었습니다😆")
         return
 
-    # 테스트
-    if text.strip().lower() == "변경근무" or text.strip().lower() == "변경 근무":
+    # 구글 캘린더
+    if text.strip().lower() in ["변경근무", "변경 근무"]:
+        try:
+            # 서비스 계정 인증 설정
+            SERVICE_ACCOUNT_FILE = 'your-service-account.json'  # 👉 실제 서비스 계정 키 경로로 변경
+            SCOPES = ['https://www.googleapis.com/auth/calendar']
+            credentials = Credentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE, scopes=SCOPES
+            )
+
+            service = build('calendar', 'v3', credentials=credentials)
+
+            # 일정 정보
+            event = {
+                'summary': '매장회의',
+                'start': {
+                    'dateTime': '2025-04-20T19:00:00',
+                    'timeZone': 'Asia/Seoul',
+                },
+                'end': {
+                    'dateTime': '2025-04-21T00:00:00',
+                    'timeZone': 'Asia/Seoul',
+                },
+            }
+
+            event_result = service.events().insert(calendarId='primary', body=event).execute()
+            say(f"<@{user_id}> 🗓️ 구글 캘린더에 매장회의가 등록되었습니다!\n➡️ {event_result.get('htmlLink')}")
+
+        except Exception as e:
+            logger.error("캘린더 등록 오류: " + str(e))
+            say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
         return
     
     try:
