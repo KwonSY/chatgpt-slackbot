@@ -1,7 +1,7 @@
 import os
 import time
 import re
-import datetime
+from datetime import datetime, timedelta
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
