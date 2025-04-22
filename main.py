@@ -28,26 +28,22 @@ def parse_changed_shift(text: str):
         for i, line in enumerate(lines):
             if line.strip() == "변경근무" and i + 1 < len(lines):
                 schedule_line = lines[i + 1]
-                match = re.match(r'(\d{1,2})/(\d{1,2})\([^)]+\)\s+(\d{1,2}:\d{2})~(\d{1,2}:\d{2})\s+(.+)', schedule_line)
+                match = re.match(r"(\d{1,2})/(\d{1,2})\(.*\)\s+(\d{1,2}):(\d{2})~(\d{1,2}):(\d{2})\s+(.+)", schedule_line)
                 if not match:
                     return None
-                month, day, start_time, end_time, name = match.groups()
+                month, day, sh, sm, eh, em, name = match.groups()
+                year = datetime.datetime.now().year
 
-                now = datetime.now()
-                year = now.year
-
-                start_dt = datetime.strptime(f"{year}-{month}-{day} {start_time}", "%Y-%m-%d %H:%M")
-                if end_time == "24:00":
-                    end_dt = datetime.strptime(f"{year}-{month}-{day} 00:00", "%Y-%m-%d %H:%M") + timedelta(days=1)
-                else:
-                    end_dt = datetime.strptime(f"{year}-{month}-{day} {end_time}", "%Y-%m-%d %H:%M")
-                    if end_dt < start_dt:
-                        end_dt += timedelta(days=1)
-
+                start_time = datetime.datetime(year, int(month), int(day), int(sh), int(sm))
+                end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
+    
+                if end_time <= start_time:
+                    end_time += datetime.timedelta(days=1)
+    
                 return {
-                    'summary': name,
-                    'start': start_dt.isoformat(),
-                    'end': end_dt.isoformat()
+                    "summary": name,
+                    "start": start_time.isoformat(),
+                    "end": end_time.isoformat()
                 }
         return None
     except Exception as e:
