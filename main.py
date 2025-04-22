@@ -78,6 +78,7 @@ def handle_message(message, say, logger):
     # 구글 캘린더
     if "변경근무" in text:
         parsed = parse_changed_shift(text)
+        logger.warning("변경근무파서")
         logger.warning(parsed)
         
         if not parsed:
