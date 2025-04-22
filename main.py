@@ -26,7 +26,6 @@ def parse_changed_shift(text: str):
         lines = text.strip().split('\n')
         
         for i, line in enumerate(lines):
-            logger.warning(line)
             if line.strip() == "변경근무" and i + 1 < len(lines):
                 schedule_line = lines[i + 1].strip()
                 
@@ -34,15 +33,19 @@ def parse_changed_shift(text: str):
                     r"(\d{1,2})/(\d{1,2})\(.*\)\s+(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})\s+(.+)",
                     schedule_line
                 )
-                
                 if not match:
-                    print("정규식 불일치:", schedule_line)
+                    print("정규식 매칭 실패:", schedule_line)
                     return None
                 
                 month, day, sh, sm, eh, em, name = match.groups()
                 year = datetime.datetime.now().year
                 start_time = datetime.datetime(year, int(month), int(day), int(sh), int(sm))
-                end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
+
+                # 24:00은 다음 날 00:00으로 처리
+                if int(eh) == 24:
+                    end_time = datetime.datetime(year, int(month), int(day), 0, int(em)) + datetime.timedelta(days=1)
+                else:
+                    end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
 
                 if end_time <= start_time:
                     end_time += datetime.timedelta(days=1)
