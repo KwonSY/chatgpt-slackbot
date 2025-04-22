@@ -30,7 +30,7 @@ def parse_changed_shift(text: str):
                 schedule_line = lines[i + 1].strip()
                 
                 match = re.search(
-                    r"(\d{1,2})/(\d{1,2})\(.*\)\s+(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})\s+(.+)",
+                    r"(\d{1,2})/(\d{1,2})(?:\(.*\))?\s+(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})\s+(.+)",
                     schedule_line
                 )
                 if not match:
@@ -63,7 +63,6 @@ def parse_changed_shift(text: str):
 # 메시지 핸들러
 @app.message(".*")
 def handle_message(message, say, logger):
-    logger.warning("message = " + str(message))
     user_id = message['user']
     text = message['text']
     logger.warning(f"User ({user_id}) said: {text}")
