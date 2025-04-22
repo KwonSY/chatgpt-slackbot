@@ -1,4 +1,5 @@
 openai
+re
 slack-bolt
 google-api-python-client
 google-auth-httplib2
