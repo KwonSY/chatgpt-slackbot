@@ -3,6 +3,7 @@ import time
 import re
 import datetime
 import logging
+import json
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
@@ -32,7 +33,7 @@ def parse_changed_shift(text: str):
                 schedule_line = lines[i + 1].strip()
                 
                 match = re.search(
-                    r"(\d{1,2})/(\d{1,2})(?:\(.*\))?\s+(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})\s+(.+)",
+                    r"(\d{1,2})/(\d{1,2})(?:\(.*\))?\s+(\d{1,2}):(\d{2})\s*[-~]\s*(\d{1,2}):(\d{2})\s+(.+)",
                     schedule_line
                 )
                 if not match:
