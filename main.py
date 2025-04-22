@@ -41,15 +41,14 @@ def parse_changed_shift(text: str):
                 
                 month, day, sh, sm, eh, em, name = match.groups()
                 year = datetime.datetime.now().year
-
                 start_time = datetime.datetime(year, int(month), int(day), int(sh), int(sm))
                 end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
 
                 if end_time <= start_time:
                     end_time += datetime.timedelta(days=1)
 
-                return {
-                    "summary": name,
+               return {
+                    "summary": name.strip(),
                     "start": start_time.isoformat(),
                     "end": end_time.isoformat()
                 }
