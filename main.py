@@ -20,6 +20,42 @@ app = App(token=bot_token)
 # 사용자별 스레드 저장용 딕셔너리 (간단한 메모리 저장, 서버 재시작 시 초기화됨)
 user_threads = {}
 
+def parse_changed_shift(text: str):
+    """
+    '변경근무\n4/19(토) 17:00~24:00 허라윤' 형식만 추출해서 파싱
+    """
+    try:
+        lines = text.strip().split('\n')
+        # "변경근무"가 있는 줄을 찾아서 그 다음 줄을 타겟으로 설정
+        for i, line in enumerate(lines):
+            if line.strip() == "변경근무" and i + 1 < len(lines):
+                schedule_line = lines[i + 1]
+                match = re.match(r'(\d{1,2})/(\d{1,2})\([^)]+\)\s+(\d{1,2}:\d{2})~(\d{1,2}:\d{2})\s+(.+)', schedule_line)
+                if not match:
+                    return None
+                month, day, start_time, end_time, name = match.groups()
+
+                now = datetime.now()
+                year = now.year
+
+                start_dt = datetime.strptime(f"{year}-{month}-{day} {start_time}", "%Y-%m-%d %H:%M")
+                if end_time == "24:00":
+                    end_dt = datetime.strptime(f"{year}-{month}-{day} 00:00", "%Y-%m-%d %H:%M") + timedelta(days=1)
+                else:
+                    end_dt = datetime.strptime(f"{year}-{month}-{day} {end_time}", "%Y-%m-%d %H:%M")
+                    if end_dt < start_dt:
+                        end_dt += timedelta(days=1)
+
+                return {
+                    'summary': name,
+                    'start': start_dt.isoformat(),
+                    'end': end_dt.isoformat()
+                }
+        return None
+    except Exception as e:
+        print("Parsing Error:", e)
+        return None
+
 # 메시지 핸들러
 @app.message(".*")
 def handle_message(message, say, logger):
@@ -43,25 +79,29 @@ def handle_message(message, say, logger):
 
     # 구글 캘린더
     if text.strip().lower() in ["변경근무", "변경 근무"]:
+        parsed = parse_changed_shift(text)
+        
+        if not parsed:
+            say(f"<@{user_id}> 😥 변경근무 형식을 읽을 수 없어요.")
+            return
+        
         try:
-            # 서비스 계정 인증 설정
-            SERVICE_ACCOUNT_FILE = 'your-service-account.json'  # 👉 실제 서비스 계정 키 경로로 변경
-            SCOPES = ['https://www.googleapis.com/auth/calendar']
-            credentials = Credentials.from_service_account_file(
-                SERVICE_ACCOUNT_FILE, scopes=SCOPES
+            GOOGLE_CREDENTIALS = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+            credentials_info = json.loads(GOOGLE_CREDENTIALS)
+            credentials = Credentials.from_service_account_info(
+                credentials_info, scopes=["https://www.googleapis.com/auth/calendar"]
             )
-
             service = build('calendar', 'v3', credentials=credentials)
 
             # 일정 정보
             event = {
                 'summary': '매장회의',
                 'start': {
-                    'dateTime': '2025-04-20T19:00:00',
+                    'dateTime': '2025-04-23T19:00:00',
                     'timeZone': 'Asia/Seoul',
                 },
                 'end': {
-                    'dateTime': '2025-04-21T00:00:00',
+                    'dateTime': '2025-04-24T00:00:00',
                     'timeZone': 'Asia/Seoul',
                 },
             }
