@@ -67,7 +67,7 @@ def parse_changed_shift(text: str):
 def handle_message(message, say, logger):
     user_id = message['user']
     text = message['text']
-    logger.warning(f"User ({user_id}) said: {text}")
+    #logger.warning(f"User ({user_id}) said: {text}")
 
     # 유저 스레드 초기화
     if text.strip().lower() == "/reset":
