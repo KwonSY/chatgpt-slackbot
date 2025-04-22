@@ -25,7 +25,7 @@ def parse_changed_shift(text: str):
     try:
         lines = text.strip().split('\n')
         for i, line in enumerate(lines):
-            logger.warning(i)
+            logger.warning(line)
             if line.strip() == "변경근무" and i + 1 < len(lines):
                 schedule_line = lines[i + 1].strip()
                 match = re.search(
