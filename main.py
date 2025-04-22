@@ -50,7 +50,7 @@ def parse_changed_shift(text: str):
                 if end_time <= start_time:
                     end_time += datetime.timedelta(days=1)
 
-               return {
+                return {
                     "summary": name.strip(),
                     "start": start_time.isoformat(),
                     "end": end_time.isoformat()
