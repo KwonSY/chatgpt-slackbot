@@ -24,17 +24,21 @@ user_threads = {}
 def parse_changed_shift(text: str):
     try:
         lines = text.strip().split('\n')
+        
         for i, line in enumerate(lines):
             logger.warning(line)
             if line.strip() == "변경근무" and i + 1 < len(lines):
                 schedule_line = lines[i + 1].strip()
-                match = re.search(
+                
+               match = re.search(
                     r"(\d{1,2})/(\d{1,2})\(.*\)\s+(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})\s+(.+)",
                     schedule_line
                 )
+                
                 if not match:
                     print("정규식 불일치:", schedule_line)
                     return None
+                
                 month, day, sh, sm, eh, em, name = match.groups()
                 year = datetime.datetime.now().year
 
