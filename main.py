@@ -24,22 +24,25 @@ user_threads = {}
 def parse_changed_shift(text: str):
     try:
         lines = text.strip().split('\n')
-        # "변경근무"가 있는 줄을 찾아서 그 다음 줄을 타겟으로 설정
         for i, line in enumerate(lines):
             if line.strip() == "변경근무" and i + 1 < len(lines):
-                schedule_line = lines[i + 1]
-                match = re.match(r"(\d{1,2})/(\d{1,2})\(.*\)\s+(\d{1,2}):(\d{2})~(\d{1,2}):(\d{2})\s+(.+)", schedule_line)
+                schedule_line = lines[i + 1].strip()
+                match = re.search(
+                    r"(\d{1,2})/(\d{1,2})\(.*\)\s+(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})\s+(.+)",
+                    schedule_line
+                )
                 if not match:
+                    print("정규식 불일치:", schedule_line)
                     return None
                 month, day, sh, sm, eh, em, name = match.groups()
                 year = datetime.datetime.now().year
 
                 start_time = datetime.datetime(year, int(month), int(day), int(sh), int(sm))
                 end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
-    
+
                 if end_time <= start_time:
                     end_time += datetime.timedelta(days=1)
-    
+
                 return {
                     "summary": name,
                     "start": start_time.isoformat(),
