@@ -113,66 +113,66 @@ def handle_message(message, say, logger):
             logger.error("캘린더 등록 오류: " + str(e))
             say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
         return
+    else
+        try:
+            # 사용자 스레드가 없다면 생성
+            if user_id not in user_threads:
+                thread = client.beta.threads.create()
+                user_threads[user_id] = thread.id
+                logger.info(f"Created new thread for user {user_id}: {thread.id}")
     
-    try:
-        # 사용자 스레드가 없다면 생성
-        if user_id not in user_threads:
-            thread = client.beta.threads.create()
-            user_threads[user_id] = thread.id
-            logger.info(f"Created new thread for user {user_id}: {thread.id}")
-
-        thread_id = user_threads[user_id]
-        
-        # 메시지를 스레드에 추가
-        client.beta.threads.messages.create(
-            thread_id=thread_id,
-            role="user",
-            content=text
-        )
-
-        # 어시스턴트 실행
-        run = client.beta.threads.runs.create(
-            thread_id=thread_id,
-            assistant_id=assistant_id
-        )
-        logger.warning(run)
-        
-        # 최대 30초 기다리기 (3초 간격, 총 10번)
-        for _ in range(10):
-            run_status = client.beta.threads.runs.retrieve(
+            thread_id = user_threads[user_id]
+            
+            # 메시지를 스레드에 추가
+            client.beta.threads.messages.create(
                 thread_id=thread_id,
-                run_id=run.id
+                role="user",
+                content=text
             )
-            logger.warning(f"Run status: {run_status.status}")
-
-            if run_status.status == "completed":
-                break
-            elif run_status.status == "failed":
-                error = run_status.last_error
-                logger.error(f"Run failed! Error: {error}")
-                if error.code == "rate_limit_exceeded":
-                    say(f"<@{user_id}> ⚠️ 현재 사용량 제한(쿼터)을 초과했어요. 조금 뒤에 다시 시도해 주세요!")
-                else:
-                    say(f"<@{user_id}> GPT 응답 실패 😥: {error.message}")
+    
+            # 어시스턴트 실행
+            run = client.beta.threads.runs.create(
+                thread_id=thread_id,
+                assistant_id=assistant_id
+            )
+            logger.warning(run)
+            
+            # 최대 30초 기다리기 (3초 간격, 총 10번)
+            for _ in range(10):
+                run_status = client.beta.threads.runs.retrieve(
+                    thread_id=thread_id,
+                    run_id=run.id
+                )
+                logger.warning(f"Run status: {run_status.status}")
+    
+                if run_status.status == "completed":
+                    break
+                elif run_status.status == "failed":
+                    error = run_status.last_error
+                    logger.error(f"Run failed! Error: {error}")
+                    if error.code == "rate_limit_exceeded":
+                        say(f"<@{user_id}> ⚠️ 현재 사용량 제한(쿼터)을 초과했어요. 조금 뒤에 다시 시도해 주세요!")
+                    else:
+                        say(f"<@{user_id}> GPT 응답 실패 😥: {error.message}")
+                    return
+                time.sleep(3)
+            else:
+                say(f"<@{user_id}> GPT 응답 시간이 너무 오래 걸려서 중단했어요 😥")
                 return
-            time.sleep(3)
-        else:
-            say(f"<@{user_id}> GPT 응답 시간이 너무 오래 걸려서 중단했어요 😥")
-            return
-
-        # 응답 메시지 가져오기
-        messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
-        logger.warning(messages)
-        assistant_messages = [m for m in messages.data if m.role == "assistant"]
-        logger.warning(assistant_messages)
-        last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
-        logger.warning("last_message = " + str(last_message))
-        
-        say(f"<@{user_id}> {last_message}")
-
-    except Exception as e:
-        logger.exception("Assistant API 오류 발생")
-        say(f"<@{user_id}> GPT 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.")
+    
+            # 응답 메시지 가져오기
+            messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
+            logger.warning(messages)
+            assistant_messages = [m for m in messages.data if m.role == "assistant"]
+            logger.warning(assistant_messages)
+            last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
+            logger.warning("last_message = " + str(last_message))
+            
+            say(f"<@{user_id}> {last_message}")
+    
+        except Exception as e:
+            logger.exception("Assistant API 오류 발생")
+            say(f"<@{user_id}> GPT 응답 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.")
 
 #앱 실행
 if __name__ == "__main__":
