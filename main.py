@@ -7,6 +7,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from openai import OpenAI
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+import re
 
 #API 키 세팅
 app_token = os.environ.get("SLACK_APP_TOKEN")
