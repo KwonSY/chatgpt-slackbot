@@ -1,5 +1,6 @@
 import os
 import time
+import re
 import datetime
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -21,9 +22,6 @@ app = App(token=bot_token)
 user_threads = {}
 
 def parse_changed_shift(text: str):
-    """
-    '변경근무\n4/19(토) 17:00~24:00 허라윤' 형식만 추출해서 파싱
-    """
     try:
         lines = text.strip().split('\n')
         # "변경근무"가 있는 줄을 찾아서 그 다음 줄을 타겟으로 설정
@@ -78,7 +76,7 @@ def handle_message(message, say, logger):
         return
 
     # 구글 캘린더
-    if text.strip().lower() in ["변경근무", "변경 근무"]:
+    if "변경근무" in text:
         parsed = parse_changed_shift(text)
         
         if not parsed:
@@ -111,7 +109,8 @@ def handle_message(message, say, logger):
             logger.error("캘린더 등록 오류: " + str(e))
             say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
         return
-    else
+        
+    else:
         try:
             # 사용자 스레드가 없다면 생성
             if user_id not in user_threads:
@@ -160,9 +159,7 @@ def handle_message(message, say, logger):
     
             # 응답 메시지 가져오기
             messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
-            logger.warning(messages)
             assistant_messages = [m for m in messages.data if m.role == "assistant"]
-            logger.warning(assistant_messages)
             last_message = assistant_messages[0].content[0].text.value if assistant_messages else "(응답 없음)"
             logger.warning("last_message = " + str(last_message))
             
