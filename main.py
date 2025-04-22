@@ -93,22 +93,20 @@ def handle_message(message, say, logger):
             )
             service = build('calendar', 'v3', credentials=credentials)
 
-            # 일정 정보
             event = {
-                'summary': '매장회의',
+                'summary': parsed['summary'],
                 'start': {
-                    'dateTime': '2025-04-23T19:00:00',
+                    'dateTime': parsed['start'],
                     'timeZone': 'Asia/Seoul',
                 },
                 'end': {
-                    'dateTime': '2025-04-24T00:00:00',
+                    'dateTime': parsed['end'],
                     'timeZone': 'Asia/Seoul',
                 },
             }
 
             event_result = service.events().insert(calendarId='primary', body=event).execute()
-            say(f"<@{user_id}> 🗓️ 구글 캘린더에 매장회의가 등록되었습니다!\n➡️ {event_result.get('htmlLink')}")
-
+            say(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
         except Exception as e:
             logger.error("캘린더 등록 오류: " + str(e))
             say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
