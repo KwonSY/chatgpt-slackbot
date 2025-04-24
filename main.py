@@ -97,7 +97,8 @@ def handle_message(message, say, logger):
         parsed = parse_changed_shift(text)
         
         if not parsed:
-            say(f"<@{user_id}> 😥 변경근무 형식을 읽을 수 없어요.")
+            #say(f"<@{user_id}> 😥 변경근무 형식을 읽을 수 없어요.")
+            print(f"<@{user_id}> 😥 변경근무 형식을 읽을 수 없어요.")
             return
         
         try:
@@ -125,9 +126,11 @@ def handle_message(message, say, logger):
             calendar_id = '4450b6831bfd30534a68f6885c6ac581139bf2d74615406f6b16c2eceaf9429b@group.calendar.google.com'
 
             event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
+            print(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
             #say(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
         except Exception as e:
             logger.error("캘린더 등록 오류: " + str(e))
+            print(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
             #say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
         return
         
