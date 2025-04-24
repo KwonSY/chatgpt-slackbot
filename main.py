@@ -53,7 +53,12 @@ def parse_changed_shift(text: str):
                 if end_time <= start_time:
                     end_time += datetime.timedelta(days=1)
 
-                logger.warning(end_time)
+                logging.warning("===============name===============")
+                logging.warning(name)
+                logging.warning("===============start_time===============")
+                logging.warning(start_time)
+                logging.warning("===============end_time===============")
+                logging.warning(end_time)
 
                 return {
                     "summary": name.strip(),
