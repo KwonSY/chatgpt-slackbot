@@ -28,7 +28,6 @@ def parse_changed_shift(text: str):
         lines = text.strip().split('\n')
         
         for i, line in enumerate(lines):
-            logging.warning(line)
             if "변경근무" in line.strip() and i + 1 < len(lines):
                 schedule_line = lines[i + 1].strip()
                 
@@ -52,13 +51,6 @@ def parse_changed_shift(text: str):
 
                 if end_time <= start_time:
                     end_time += datetime.timedelta(days=1)
-
-                logging.warning("===============name===============")
-                logging.warning(name)
-                logging.warning("===============start_time===============")
-                logging.warning(start_time)
-                logging.warning("===============end_time===============")
-                logging.warning(end_time)
 
                 return {
                     "summary": name.strip(),
