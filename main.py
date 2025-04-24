@@ -64,7 +64,7 @@ def parse_changed_shift(text: str):
             end_time += datetime.timedelta(days=1)
 
         return {
-            "summary": original_name,
+            "summary": original_name.replace('```',''),
             "start": start_time.isoformat(),
             "end": end_time.isoformat()
         }
