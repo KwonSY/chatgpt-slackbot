@@ -112,7 +112,9 @@ def handle_message(message, say, logger):
                 },
             }
 
-            event_result = service.events().insert(calendarId='primary', body=event).execute()
+            calendar_id = 'NDQ1MGI2ODMxYmZkMzA1MzRhNjhmNjg4NWM2YWM1ODExMzliZjJkNzQ2MTU0MDZmNmIxNmMyZWNlYWY5NDI5YkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t'
+
+            event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
             say(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
         except Exception as e:
             logger.error("캘린더 등록 오류: " + str(e))
