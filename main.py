@@ -85,8 +85,6 @@ def handle_message(message, say, logger):
     # 구글 캘린더
     if "변경근무" in text:
         parsed = parse_changed_shift(text)
-        logger.warning("=============변경근무파서=============")
-        logger.warning(parsed)
         
         if not parsed:
             say(f"<@{user_id}> 😥 변경근무 형식을 읽을 수 없어요.")
@@ -114,7 +112,7 @@ def handle_message(message, say, logger):
                 },
             }
 
-            calendar_id = 'NDQ1MGI2ODMxYmZkMzA1MzRhNjhmNjg4NWM2YWM1ODExMzliZjJkNzQ2MTU0MDZmNmIxNmMyZWNlYWY5NDI5YkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t'
+            calendar_id = 'NDQ1MGI2ODMxYmZkMzA1MzRhNjhmNjg4NWM2YWM1ODExMzliZjJkNzQ2MTU0MDZmNmIxNmMyZWNlYWY5NDI5YkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t@group.calendar.google.com'
 
             event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
             say(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
