@@ -118,7 +118,7 @@ def handle_message(message, say, logger):
             #say(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
         except Exception as e:
             logger.error("캘린더 등록 오류: " + str(e))
-            say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
+            #say(f"<@{user_id}> 😥 캘린더 일정 등록에 실패했어요. 다시 시도해 주세요.")
         return
         
     else:
