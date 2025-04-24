@@ -26,38 +26,48 @@ user_threads = {}
 def parse_changed_shift(text: str):
     try:
         lines = text.strip().split('\n')
-        
+        original_name = None
+        new_schedule_line = None
+
         for i, line in enumerate(lines):
+            if "본근무" in line.strip() and i + 1 < len(lines):
+                match = re.search(r"\d{1,2}/\d{1,2}(?:\(.*\))?\s+\d{1,2}:\d{2}\s*[-~]\s*\d{1,2}:\d{2}\s+(.+)", lines[i + 1].strip())
+                if match:
+                    original_name = match.group(1).strip()
+
             if "변경근무" in line.strip() and i + 1 < len(lines):
-                schedule_line = lines[i + 1].strip()
-                
-                match = re.search(
-                    r"(\d{1,2})/(\d{1,2})(?:\(.*\))?\s+(\d{1,2}):(\d{2})\s*[-~]\s*(\d{1,2}):(\d{2})\s+(.+)",
-                    schedule_line
-                )
-                if not match:
-                    print("정규식 매칭 실패:", schedule_line)
-                    return None
-                
-                month, day, sh, sm, eh, em, name = match.groups()
-                year = datetime.datetime.now().year
-                start_time = datetime.datetime(year, int(month), int(day), int(sh), int(sm))
+                new_schedule_line = lines[i + 1].strip()
 
-                # 24:00은 다음 날 00:00으로 처리
-                if int(eh) == 24:
-                    end_time = datetime.datetime(year, int(month), int(day), 0, int(em)) + datetime.timedelta(days=1)
-                else:
-                    end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
+        if not new_schedule_line or not original_name:
+            print("일정 또는 이름 파싱 실패")
+            return None
 
-                if end_time <= start_time:
-                    end_time += datetime.timedelta(days=1)
-                #logging.warning("name = " + name)
-                return {
-                    "summary": name.strip().replace('```',''),
-                    "start": start_time.isoformat(),
-                    "end": end_time.isoformat()
-                }
-        return None
+        match = re.search(
+            r"(\d{1,2})/(\d{1,2})(?:\(.*\))?\s+(\d{1,2}):(\d{2})\s*[-~]\s*(\d{1,2}):(\d{2})\s+.+",
+            new_schedule_line
+        )
+        if not match:
+            print("정규식 매칭 실패:", new_schedule_line)
+            return None
+
+        month, day, sh, sm, eh, em = match.groups()[:6]
+        year = datetime.datetime.now().year
+        start_time = datetime.datetime(year, int(month), int(day), int(sh), int(sm))
+
+        # 24:00 처리
+        if int(eh) == 24:
+            end_time = datetime.datetime(year, int(month), int(day), 0, int(em)) + datetime.timedelta(days=1)
+        else:
+            end_time = datetime.datetime(year, int(month), int(day), int(eh), int(em))
+
+        if end_time <= start_time:
+            end_time += datetime.timedelta(days=1)
+
+        return {
+            "summary": original_name,
+            "start": start_time.isoformat(),
+            "end": end_time.isoformat()
+        }
     except Exception as e:
         print("Parsing Error:", e)
         return None
