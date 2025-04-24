@@ -112,7 +112,7 @@ def handle_message(message, say, logger):
                 },
             }
 
-            calendar_id = 'NDQ1MGI2ODMxYmZkMzA1MzRhNjhmNjg4NWM2YWM1ODExMzliZjJkNzQ2MTU0MDZmNmIxNmMyZWNlYWY5NDI5YkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t@group.calendar.google.com'
+            calendar_id = '4450b6831bfd30534a68f6885c6ac581139bf2d74615406f6b16c2eceaf9429b@group.calendar.google.com'
 
             event_result = service.events().insert(calendarId=calendar_id, body=event).execute()
             say(f"<@{user_id}> ✅ `{parsed['summary']}` 일정이 등록되었어요!\n📅 {event_result.get('htmlLink')}")
