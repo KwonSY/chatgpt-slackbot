@@ -94,7 +94,9 @@ def handle_message(message, say, logger):
         
         try:
             GOOGLE_CREDENTIALS = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+            print("환경변수 내용:", repr(GOOGLE_CREDENTIALS))
             credentials_info = json.loads(GOOGLE_CREDENTIALS)
+            print("파싱 성공:", credentials_info["client_email"])
             credentials = Credentials.from_service_account_info(
                 credentials_info, scopes=["https://www.googleapis.com/auth/calendar"]
             )
